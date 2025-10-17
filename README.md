@@ -18,12 +18,12 @@ Step 4: For Sentiment Analysis Insights, the page answers the questions given in
 <img width="500" height="281" alt="Screenshot (36)" src="https://github.com/user-attachments/assets/3ec68424-1797-435c-8812-2c11d2ec758c" />
 <img width="500" height="281" alt="Screenshot (37)" src="https://github.com/user-attachments/assets/c5b44e44-3edd-4a1b-8b13-6d520eb3464c" />
 
-Step 5:
+Step 5: For Model Training and Evaluation, we do logistic regression with review and sentiment with 80/20 split on training and testing. And this is shown in streamlit with model evaluation metrics that show accuracy, precision etc , a confusion matrix for the model for the data
 
 <img width="500" height="281" alt="Screenshot (38)" src="https://github.com/user-attachments/assets/261ae81a-436a-4969-be22-d6c1117eb45d" />
 <img width="500" height="281" alt="Screenshot (39)" src="https://github.com/user-attachments/assets/b7f46c30-4218-41a7-879a-18fe01f2b63f" />
 
-Step 6:
+Step 6: For Try your own review tab, it is to predict the input given by the user whether its positive review or negative
 
 <img width="500" height="281" alt="Screenshot (40)" src="https://github.com/user-attachments/assets/a3d93cd1-9baf-4095-a9ee-8774eeee21ff" />
 
