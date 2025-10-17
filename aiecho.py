@@ -18,7 +18,7 @@ import re
 # TITLE 
 
 st.set_page_config(page_title="ChatGPT Reviews Sentiment", layout="wide")
-st.title("ChatGPT Reviews Sentiment Analysis Dashboard")
+st.title("ChatGPT Reviews Sentiment Analysis")
 st.markdown("### Interactive NLP and EDA with Streamlit")
 
 # LOAD DATA
@@ -269,4 +269,5 @@ elif page == "Try Your Own Review":
         clean_input = clean_text(user_input)
         sentiment = get_sentiment(clean_input)
         st.success(f"Predicted Sentiment: {sentiment}")
+
 
