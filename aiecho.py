@@ -223,42 +223,87 @@ elif page == "Sentiment Analysis Insights":
 # MODEL TRAINING
 
 elif page == "Model Training and Evaluation":
-    st.header("Train a Basic Sentiment Classifier (TF-IDF + Logistic Regression)")
+    st.header("Model Training and Comparison")
 
-    # Automatically train when page loads
-    with st.spinner("Training model..."):
+    st.markdown("We’ll train and evaluate three models:")
+    st.markdown("- Logistic Regression (Linear baseline)")
+    st.markdown("- Naïve Bayes (Probabilistic baseline)")
+    st.markdown("- Random Forest (Ensemble tree-based)")
+
+    with st.spinner("Training and evaluating models..."):
         X = df['clean_review']
         y = df['sentiment']
+
         tfidf = TfidfVectorizer(max_features=5000)
         X_vec = tfidf.fit_transform(X)
 
         X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.2, random_state=42)
-        model = LogisticRegression(max_iter=200)
-        model.fit(X_train, y_train)
-        preds = model.predict(X_test)
 
-        accuracy = accuracy_score(y_test, preds)
-        precision = precision_score(y_test, preds, average='weighted')
-        recall = recall_score(y_test, preds, average='weighted')
-        f1 = f1_score(y_test, preds, average='weighted')
+        # Logistic Regression
+        lr_model = LogisticRegression(max_iter=200)
+        lr_model.fit(X_train, y_train)
+        lr_preds = lr_model.predict(X_test)
+
+        # Naive Bayes
+        from sklearn.naive_bayes import MultinomialNB
+        nb_model = MultinomialNB()
+        nb_model.fit(X_train, y_train)
+        nb_preds = nb_model.predict(X_test)
+
+        # Random Forest
+        from sklearn.ensemble import RandomForestClassifier
+        rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+        rf_model.fit(X_train, y_train)
+        rf_preds = rf_model.predict(X_test)
+
+        # Evaluation
+        def eval_model(y_true, y_pred):
+            return {
+                "Accuracy": accuracy_score(y_true, y_pred),
+                "Precision": precision_score(y_true, y_pred, average='weighted'),
+                "Recall": recall_score(y_true, y_pred, average='weighted'),
+                "F1": f1_score(y_true, y_pred, average='weighted'),
+            }
+
+        results = {
+            "Logistic Regression": eval_model(y_test, lr_preds),
+            "Naive Bayes": eval_model(y_test, nb_preds),
+            "Random Forest": eval_model(y_test, rf_preds),
+        }
 
     st.success("Model training completed successfully!")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Accuracy", f"{accuracy:.3f}")
-        st.metric("Precision", f"{precision:.3f}")
-    with col2:
-        st.metric("Recall", f"{recall:.3f}")
-        st.metric("F1 Score", f"{f1:.3f}")
+    st.subheader("Model Performance Comparison")
 
+    results_df = pd.DataFrame(results).T
+    st.dataframe(results_df.style.background_gradient(cmap='Blues').format("{:.3f}"))
+
+    # Highlight best model
+    best_model = results_df['Accuracy'].idxmax()
+    st.info(f"Best Performing Model: **{best_model}** with Accuracy = {results_df.loc[best_model, 'Accuracy']:.3f}")
+
+    # Confusion Matrix for best model
     st.subheader("Confusion Matrix")
+    if best_model == "Logistic Regression":
+        preds = lr_preds
+    elif best_model == "Naive Bayes":
+        preds = nb_preds
+    else:
+        preds = rf_preds
+
     cm = confusion_matrix(y_test, preds)
     fig, ax = plt.subplots()
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
     st.pyplot(fig)
+
+    st.markdown("""
+    **Interpretation:**
+    - Logistic Regression and Naïve Bayes generally perform well for text data.
+    - Random Forest may underperform slightly due to sparse high-dimensional TF-IDF features.
+    - Logistic Regression is usually preferred for explainability and efficiency.
+    """)
 
 # PREDICTION
 
@@ -269,5 +314,6 @@ elif page == "Try Your Own Review":
         clean_input = clean_text(user_input)
         sentiment = get_sentiment(clean_input)
         st.success(f"Predicted Sentiment: {sentiment}")
+
 
 
