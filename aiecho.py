@@ -9,21 +9,23 @@ import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import pickle
+import os
+import re
 
 nltk.download('stopwords')
 from nltk.corpus import stopwords
-import re
 
-# TITLE 
-
+# ================= TITLE =================
 st.set_page_config(page_title="ChatGPT Reviews Sentiment", layout="wide")
 st.title("ChatGPT Reviews Sentiment Analysis")
 st.markdown("### Interactive NLP and EDA with Streamlit")
 
-# LOAD DATA
-
-DATA_PATH = r"c:\Users\BALA\Downloads\chatgpt_style_reviews_dataset.csv"
+# ================= LOAD DATA =================
+DATA_PATH = r"C:\Users\BALA\Downloads\chatgpt_style_reviews_dataset.csv"
 
 @st.cache_data
 def load_data():
@@ -34,8 +36,7 @@ def load_data():
 
 df = load_data()
 
-# DATA CLEANING & SENTIMENT ANALYSIS
-
+# ================= DATA CLEANING & SENTIMENT =================
 stop_words = set(stopwords.words('english'))
 
 def clean_text(text):
@@ -57,8 +58,7 @@ def get_sentiment(text):
 
 df['sentiment'] = df['clean_review'].apply(get_sentiment)
 
-# SIDEBAR
-
+# ================= SIDEBAR =================
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to:",
@@ -70,8 +70,7 @@ page = st.sidebar.radio(
     ]
 )
 
-# EDA SHOWCASE
-
+# ================= EDA =================
 if page == "Exploratory Data Analysis (EDA)":
     st.header("Exploratory Data Analysis (EDA)")
 
@@ -146,12 +145,14 @@ if page == "Exploratory Data Analysis (EDA)":
         st.image(wc_one_star.to_array())
 
     elif eda_option == "Average Rating per ChatGPT Version":
-        fig, ax = plt.subplots()
-        sns.barplot(data=df, x='version', y='rating', estimator=np.mean, ax=ax, palette='crest')
+        top_versions = df['version'].value_counts().head(15).index
+        fig, ax = plt.subplots(figsize=(10,6))
+        sns.barplot(data=df[df['version'].isin(top_versions)], y='version', x='rating', estimator=np.mean, ax=ax, palette='crest')
+        plt.tight_layout()
         st.pyplot(fig)
 
-# SENTIMENT ANALYSIS QUESTIONS
 
+# ================= SENTIMENT INSIGHTS =================
 elif page == "Sentiment Analysis Insights":
     st.header("Sentiment Analysis Insights")
 
@@ -211,64 +212,117 @@ elif page == "Sentiment Analysis Insights":
         st.pyplot(plt.gcf())
 
     elif q_option == "Sentiment by Version":
-        sns.countplot(data=df, x='version', hue='sentiment', palette='crest')
-        plt.xticks(rotation=45)
+        top_versions = df['version'].value_counts().head(15).index
+        sns.countplot(data=df[df['version'].isin(top_versions)], y='version', hue='sentiment', palette='crest')
+        plt.tight_layout()
         st.pyplot(plt.gcf())
+
 
     elif q_option == "Negative Feedback Themes":
         neg_reviews = ' '.join(df[df['sentiment']=='Negative']['clean_review'])
         wc_neg = WordCloud(width=800, height=400, background_color='white').generate(neg_reviews)
         st.image(wc_neg.to_array(), caption="Most Frequent Negative Words")
 
-# MODEL TRAINING
-
+# ================= MODEL TRAINING =================
 elif page == "Model Training and Evaluation":
-    st.header("Train a Basic Sentiment Classifier (TF-IDF + Logistic Regression)")
+    st.header("Train Sentiment Classifiers (TF-IDF + Multiple Models)")
 
-    # Automatically train when page loads
-    with st.spinner("Training model..."):
+    save_path = r"C:\Users\BALA\Downloads"
+
+    with st.spinner("Training models..."):
         X = df['clean_review']
         y = df['sentiment']
+
         tfidf = TfidfVectorizer(max_features=5000)
         X_vec = tfidf.fit_transform(X)
 
+        # Split data
         X_train, X_test, y_train, y_test = train_test_split(X_vec, y, test_size=0.2, random_state=42)
-        model = LogisticRegression(max_iter=200)
-        model.fit(X_train, y_train)
-        preds = model.predict(X_test)
-        
-        accuracy = accuracy_score(y_test, preds)
-        precision = precision_score(y_test, preds, average='weighted')
-        recall = recall_score(y_test, preds, average='weighted')
-        f1 = f1_score(y_test, preds, average='weighted')
 
-    st.success("Model training completed successfully!")
+        # Define models
+        models = {
+            "Logistic Regression": LogisticRegression(max_iter=200),
+            "Naive Bayes": MultinomialNB(),
+            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)
+        }
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Accuracy", f"{accuracy:.3f}")
-        st.metric("Precision", f"{precision:.3f}")
-    with col2:
-        st.metric("Recall", f"{recall:.3f}")
-        st.metric("F1 Score", f"{f1:.3f}")
+        trained_models = {}
+        metrics = {}
 
-    st.subheader("Confusion Matrix")
-    cm = confusion_matrix(y_test, preds)
-    fig, ax = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("Actual")
-    st.pyplot(fig)
+        for name, model in models.items():
+            model.fit(X_train, y_train)
+            trained_models[name] = model
 
-# PREDICTION
+            preds = model.predict(X_test)
+            metrics[name] = {
+                "accuracy": accuracy_score(y_test, preds),
+                "precision": precision_score(y_test, preds, average='weighted'),
+                "recall": recall_score(y_test, preds, average='weighted'),
+                "f1": f1_score(y_test, preds, average='weighted'),
+                "conf_matrix": confusion_matrix(y_test, preds)
+            }
 
+            # Save each model
+            model_file = os.path.join(save_path, f"{name.replace(' ','_').lower()}.pkl")
+            with open(model_file, 'wb') as f:
+                pickle.dump(model, f)
+
+        # Save TF-IDF vectorizer
+        tfidf_file = os.path.join(save_path, "tfidf_vectorizer.pkl")
+        with open(tfidf_file, 'wb') as f:
+            pickle.dump(tfidf, f)
+
+    st.success(f"Models and TF-IDF vectorizer trained and saved in {save_path}!")
+
+    # Display metrics
+    for name in models.keys():
+        st.subheader(name)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Accuracy", f"{metrics[name]['accuracy']:.3f}")
+            st.metric("Precision", f"{metrics[name]['precision']:.3f}")
+        with col2:
+            st.metric("Recall", f"{metrics[name]['recall']:.3f}")
+            st.metric("F1 Score", f"{metrics[name]['f1']:.3f}")
+
+        st.subheader("Confusion Matrix")
+        fig, ax = plt.subplots()
+        sns.heatmap(metrics[name]['conf_matrix'], annot=True, fmt='d', cmap='Blues', ax=ax)
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
+        st.pyplot(fig)
+
+# ================= PREDICTION =================
 elif page == "Try Your Own Review":
     st.header("Predict Sentiment of Your Own Review")
     user_input = st.text_area("Enter a ChatGPT review:")
-    if st.button("Predict Sentiment"):
+
+    save_path = r"C:\Users\BALA\Downloads"
+
+    # Load TF-IDF vectorizer
+    tfidf_path = os.path.join(save_path, "tfidf_vectorizer.pkl")
+    if os.path.exists(tfidf_path):
+        with open(tfidf_path, 'rb') as f:
+            tfidf = pickle.load(f)
+
+    # Model selection
+    model_choice = st.selectbox(
+        "Select Model for Prediction:",
+        ["Logistic Regression", "Naive Bayes", "Random Forest"]
+    )
+
+    model_path = os.path.join(save_path, f"{model_choice.replace(' ','_').lower()}.pkl")
+    if os.path.exists(model_path):
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+
+    if st.button("Predict Sentiment") and user_input.strip():
         clean_input = clean_text(user_input)
-        sentiment = get_sentiment(clean_input)
-        st.success(f"Predicted Sentiment: {sentiment}")
+        vect_input = tfidf.transform([clean_input])
+        prediction = model.predict(vect_input)[0]
+        st.success(f"Predicted Sentiment ({model_choice}): {prediction}")
+
+
 
 
 
