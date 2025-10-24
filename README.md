@@ -18,14 +18,16 @@ Step 4: For Sentiment Analysis Insights, the page answers the questions given in
 <img width="500" height="281" alt="Screenshot (36)" src="https://github.com/user-attachments/assets/3ec68424-1797-435c-8812-2c11d2ec758c" />
 <img width="500" height="281" alt="Screenshot (37)" src="https://github.com/user-attachments/assets/c5b44e44-3edd-4a1b-8b13-6d520eb3464c" />
 
-Step 5: For Model Training and Evaluation, we do logistic regression with review and sentiment with 80/20 split on training and testing. And this is shown in streamlit with model evaluation metrics that show accuracy, precision etc , a confusion matrix for the model for the data
+Step 5: For Model Training and Evaluation, we do logistic regression,native bayes and random forest with review and sentiment with 80/20 split on training and testing. And this is shown in streamlit with model evaluation metrics that show accuracy, precision etc , a confusion matrix for the model for the data
 
-<img width="500" height="281" alt="Screenshot (38)" src="https://github.com/user-attachments/assets/261ae81a-436a-4969-be22-d6c1117eb45d" />
-<img width="500" height="281" alt="Screenshot (39)" src="https://github.com/user-attachments/assets/b7f46c30-4218-41a7-879a-18fe01f2b63f" />
+<img width="500" height="281" alt="Screenshot (72)" src="https://github.com/user-attachments/assets/4c200d90-cf88-41a8-b11d-f7e0c3c113a5" />
+<img width="500" height="281" alt="Screenshot (73)" src="https://github.com/user-attachments/assets/f416d6db-4ba0-4895-9719-fd025ba76c0b" />
 
-Step 6: For Try your own review tab, it is to predict the input given by the user whether its positive review or negative
+Step 6: For Try your own review tab, it is to predict the input given by the user whether its positive review or negative and we can choose between the 3 models of logistic regression, native bayes and random forest 
 
-<img width="500" height="281" alt="Screenshot (40)" src="https://github.com/user-attachments/assets/a3d93cd1-9baf-4095-a9ee-8774eeee21ff" />
+<img width="500" height="281" alt="Screenshot (74)" src="https://github.com/user-attachments/assets/59c550f6-56fa-4ca3-8f8a-c4c183ee21d1" />
+
+
 
 
 
