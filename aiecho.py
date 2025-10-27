@@ -22,7 +22,7 @@ from nltk.corpus import stopwords
 # ================= TITLE =================
 st.set_page_config(page_title="ChatGPT Reviews Sentiment", layout="wide")
 st.title("ChatGPT Reviews Sentiment Analysis")
-st.markdown("### EDA + Sentiment Insights + Multiple Models (Embeddings + Numeric Features)")
+st.markdown("### EDA + Sentiment Insights + Multiple Models")
 
 # ================= LOAD DATA =================
 DATA_PATH = r"C:\Users\BALA\Downloads\chatgpt_style_reviews_dataset.csv"
@@ -368,6 +368,7 @@ elif page == "Try Your Own Review":
 
         prediction = model.predict(X_input)[0]
         st.success(f"Predicted Sentiment ({model_choice}): {prediction}")
+
 
 
 
